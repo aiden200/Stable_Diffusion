@@ -1,0 +1,16 @@
+import torch
+from torch import nn
+from  torch.nn import functional as F
+import math
+
+class SelfAttention(nn.Module):
+    def __init__(self, n_heads: int, embed: int, in_bias=False, out_bias = False)
+        super().__init__()
+        self.qkv_w = nn.Linear(embed, 3*embed, bias=in_bias)
+        self.lm_head = nn.Linear(embed, embed, bias=out_bias)
+        self.n_heads = n_heads
+        self.d_head = embed // n_heads
+    
+    def forward(self, x: torch.Tensor, mask=False):
+        # x(B, len, E)
+        

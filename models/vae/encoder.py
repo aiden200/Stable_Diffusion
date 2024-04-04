@@ -49,3 +49,22 @@ class VAE_encoder(nn.Sequential):
                 # (P_L, P_R, P_B, P_T) so we are doing asymetrical padding 
                 x = F.pad(x, (0, 1, 0, 1))
             x = layer(x)
+        
+        #VAE latent space is multivariate gaussian normal
+        # (B, 8, H/8, W/8) -> 2*(B, 4, H/8, W/8)
+        mean, log_variance = torch.chunk(x, 2, dim=1)
+
+        #clamps input into range -30, 20
+        log_variance = torch.clamp(log_variance, -30, 20)
+
+        variance = log_variance.exp()
+        std = variance.sqrt()
+
+        # noise = N(0,1) -> N(mean,variance) noise
+        # X = mean + std * noise
+        x = mean + std * noise
+
+        #scale, not sure what this is, found in original repo
+        out = x * 0.18215
+
+        return out
