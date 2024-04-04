@@ -13,4 +13,30 @@ class SelfAttention(nn.Module):
     
     def forward(self, x: torch.Tensor, mask=False):
         # x(B, len, E)
+        B, L, E = x.shape
+
+        q, k, v = self.qkv_w(x).chunk(3, dim=-1)
+
+        q = q.view((B, self.n_heads, L, self.d_head))
+        k = k.view((B, self.n_heads, L, self.d_head))
+        v = v.view((B, self.n_heads, L, self.d_head))
+
+        qk = q @ v.transpose(-1,-2)
+        qk = qk * 1/math.sqrt(self.d_head)
+
+        if mask:
+            mask = torch.ones_like(qk, dtype=torch.bool).triu(1)
+            qk.masked_fill_(mask, -torch.inf)
         
+        qk = F.softmax(qk, dim=-1)
+
+        qkv = qk @ v
+
+        qkv.transpose(1,2) #(B, L, H, embed/H))
+
+        qkv = qkv.reshape((B, L, E))
+
+        output = self.lm_head(qkv)
+
+        #(B, L, embed)
+        return output

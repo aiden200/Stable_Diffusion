@@ -54,3 +54,52 @@ class VAE_AttentionBlock(nn.Module):
         out = x + resid
 
         return out
+
+
+class VAE_Decoder(nn.Sequential):
+    def __init__(self):
+        super().__init__(
+            nn.Conv2d(4, 4, kernel_size=1, padding=0),
+            nn.Conv2d(4, 512, kernel_size=3, padding=1),
+            VAE_ResidualBlock(512, 512),
+            VAE_AttentionBlock(512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            # (B, 512, H/8, W/8) -> (B, 512, H/4, W/4)
+            nn.Upsample(scale_factor=2),
+
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            VAE_ResidualBlock(512, 512),
+            # (B, 512, H/4, W/4) -> (B, 512, H/2, W/2)
+            nn.Upsample(scale_factor=2),
+
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            VAE_ResidualBlock(512, 256),
+            VAE_ResidualBlock(256, 256),
+            VAE_ResidualBlock(256, 256),
+            # (B, 512, H/2, W/2) -> (B, 512, H, W)
+            nn.Upsample(scale_factor=2),
+
+            nn.Conv2d(256, 256, kernel_size=3, padding=1),
+            VAE_ResidualBlock(256, 128),
+            VAE_ResidualBlock(128, 128),
+            VAE_ResidualBlock(128, 128),
+
+            nn.GroupNorm(32, 128), #by 32 channels each group
+            nn.SiLu(),
+
+            nn.Conv2d(128, 3, kernel_size=3, padding=1)         
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # x: (B, 4, H/8, W/8)
+        x /= 0.18215
+
+        for layer in self:
+            x = layer(x)
+        
+        return x
