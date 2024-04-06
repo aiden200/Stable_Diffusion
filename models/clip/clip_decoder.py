@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from utils.transformer_blocks import SelfAttentinon
+from utils.transformer_blocks import SelfAttention
 
 
 class CLIPEmbedding(nn.Modudle):
@@ -23,7 +23,7 @@ class CLIPLayer(nn.Module):
         super().__init__()
 
         self.layernorm1 = nn.LayerNorm(n_embed)
-        self.attention1 = SelfAttentinon(n_head, n_embed)
+        self.attention1 = SelfAttention(n_head, n_embed)
         self.layernorm2 = nn.LayerNorm(n_embed)
         self.lin1 = nn.Linear(n_embed, 4*n_embed) # in paper
         self.lin2 = nn.Linear(4*n_embed, n_embed)

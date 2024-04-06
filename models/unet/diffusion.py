@@ -27,6 +27,51 @@ class Diffusion(nn.Module):
         # (B, 4, H/8, W/8)
         return out
     
+class Unet_Attn_block(nn.Module):
+    def __init__(self, n_head, embed, context=768):
+        super().__init__()
+        channels = n_head*embed
+        self.groupnorm = nn.GroupNorm(32, channels, eps=1e-6)
+        self.conv = nn.Conv2d(channels, channels, kernel_size=1, padding=0)
+        self.layernorm_1 = nn.LayerNorm(channels)
+        self.attn1 = SelfAttention(n_head, channels, bias=False)
+        self.layernorm_2 = nn.LayerNorm(channels)
+        self.attn2 = CrossAttention(n_head, channels, context, bias=False)
+        self.layernorm_3 = nn.LayerNorm(channels)
+        self.lin1 = nn.Linear(channels, 8*channels)
+        self.lin2 = nn.Linear(4*channels, channels)
+        self.conv2 = nn.Conv2d(channels, channels, kernel_size=1, padding=0)
+    
+    def forward(self, x, prompt_embed):
+        # x (B, C, H, W), prompt_embed: (B, Seq_len, E)
+        resid = x
+        x = self.groupnorm(x)
+        x = self.conv(x)
+
+        B, C, H, W = x.shape
+        x = x.view((B, C, H*W))
+        x = x.transpose(-1,-2)
+
+        resid_short = x
+        x = self.layernorm_1(x)
+        x = self.attn1(x)
+        x += resid_short
+
+        resid_short = x
+        x = self.layernorm_2(x)
+        x = self.attn2(x, prompt_embed) # cross attention with prompt embeddings
+        x, g = self.lin1(x).chunk(2,dim=-1)
+        x = x * F.gelu(g)
+        x = self.lin2(x)
+        x += resid_short
+
+        x = x.transpose(-1, -2)
+        x = x.view((B, C, H, W))
+        out = self.conv2(x) + resid
+
+        return out
+
+    
 class Unet_resid_block(nn.Module):
     def __init__(self, in_c, out_c, time_e=1280):
         super().__init__()
