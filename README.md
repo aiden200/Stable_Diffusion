@@ -1,25 +1,37 @@
-# Stable_Diffusion
-Stable Diffusion from Scratch
+# Stable Diffusion Model Implementation
 
+This project is an open-source implementation of the Stable Diffusion model, aimed at generating high-quality images from textual descriptions. Our implementation is based on a combination of several key components, including a U-Net architecture, Variational Autoencoder (VAE), CLIP for prompt embedding, a custom scheduler, and time embeddings to facilitate temporal coherence in generated images.
 
-background p_\theta(x_0:T) := p(x_T) p_\theta(x_t-1|x_t) := \Norm(x_t-1;\mu(x_t,t), 
-\variance_theta(x_t,t))
+## Acknowledgments
 
+Special thanks to Umar Jamil for his invaluable contributions to this project. We also extend our gratitude to the authors of the original Stable Diffusion paper for their groundbreaking work in the field of text-to-image generation, which has significantly inspired and guided our implementation.
 
-Forward and backwards
-in Forward, we just take the mean and variance based on beta, which represents how much "noise" we want to insert. We use a variational autoencoder to compress the image into a latent space. The latent space is in a multivariate distribution.
+## Project Structure
 
+The project is organized as follows:
+```bash
+.
+├── LICENSE
+├── models
+│   ├── clip
+│   │   └── clip_decoder.py     # CLIP model for prompt embedding
+│   ├── unet
+│   │   └── diffusion.py        # U-Net architecture for image generation
+│   └── vae
+│       ├── decoder.py          # Decoder part of the VAE
+│       └── encoder.py          # Encoder part of the VAE
+├── README.md
+└── utils
+    └── transformer_blocks      # Transformer blocks for various utility functions
+```
 
+### 1. Environment Setup
+We recommend creating a virtual environment and installing the required dependencies:
 
-In the backward pass, we estimate how much noise there is in the image, and remove it. We need to estimate P_theta(x). Since the closed form solution is intractible, we maximize ELBO, the lower bound. While we are removing the noise, we uncompress the latent space.
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+### 2. Training the Model
 
-We want the model to condition on what we want to build (like for example, we want an image of a cat).
-
-In the unet, the model will have the current state, how much noise, and the prompt so the model can remove the noise in a way that aligns with the prompt. We can perform contrastive language-image pre-training (CLIP) the prompt so the model learns both representations. The equation is below 
-
-Classifier Free Guidance:
-output = w *(output w/ prompt - output w/out prompt) + output w/out prompt
-w stands for how much you want the model to pay attention to the prompt
-
-
-Our conditionals, are our embeddings of our prompt (text or image)
