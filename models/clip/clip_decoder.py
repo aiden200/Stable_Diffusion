@@ -4,7 +4,7 @@ import torch.nn.functional as F
 from utils.transformer_blocks import SelfAttention
 
 
-class CLIPEmbedding(nn.Modudle):
+class CLIPEmbedding(nn.Module):
     def __init__(self, n_vocab, e, n_tokens):
         super().__init__()
         self.token_embed = nn.Embedding(n_vocab, e)
