@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from tqdm import tqdm
-from ddpm import DDPMSampler
+from models.stable_diffusion.ddpm import DDPMSampler
 
 W = 512
 H = 512
@@ -116,6 +116,7 @@ def generate(prompt: str,
             # (2*B, 4, ZH, ZW) add unconditional prompt too
             model_input = model_input.repeat(2,1,1,1)
         
+        # Noise predicted by the model 
         model_output = diffusion(model_input, context, time_embedding)
 
         if cfg:
