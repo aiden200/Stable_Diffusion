@@ -4,7 +4,6 @@
 </div>
 
 <div align="center">
-   <a href="https://github.com/aiden200/2D3MF/issues"><img src="https://img.shields.io/github/issues/aiden200/2D3MF?style=flat-square"></a>
 
 <a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-%3E%3D1.8.0-EE4C2C?style=flat-square&logo=pytorch"></a>
 
