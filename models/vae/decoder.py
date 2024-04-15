@@ -5,12 +5,12 @@ from utils.transformer_blocks import SelfAttention
  
 class VAE_ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super().__init()
+        super().__init__()
         self.group_norm_1 = nn.GroupNorm(32, in_channels)
-        self.conv1 - nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
 
         self.group_norm_2 = nn.GroupNorm(32, out_channels)
-        self.conv2 - nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
 
         if in_channels == out_channels:
             self.resid_layer = nn.Identity()
@@ -90,7 +90,7 @@ class VAE_Decoder(nn.Sequential):
             VAE_ResidualBlock(128, 128),
 
             nn.GroupNorm(32, 128), #by 32 channels each group
-            nn.SiLu(),
+            nn.SELU(),
 
             nn.Conv2d(128, 3, kernel_size=3, padding=1)         
         )

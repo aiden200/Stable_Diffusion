@@ -4,7 +4,7 @@ from  torch.nn import functional as F
 import math
 
 class SelfAttention(nn.Module):
-    def __init__(self, n_heads: int, embed: int, in_bias=False, out_bias = False):
+    def __init__(self, n_heads: int, embed: int, in_bias=True, out_bias = True):
         super().__init__()
         self.qkv_w = nn.Linear(embed, 3*embed, bias=in_bias)
         self.lm_head = nn.Linear(embed, embed, bias=out_bias)
@@ -42,7 +42,7 @@ class SelfAttention(nn.Module):
         return output
 
 class CrossAttention(nn.Module):
-    def __init__(self, n_heads, embed_q, embed_cross, in_bias=False, out_bias = False):
+    def __init__(self, n_heads, embed_q, embed_cross, in_bias=True, out_bias = True):
         super().__init__()
         self.q_w = nn.Linear(embed_q, embed_q, bias=in_bias)
         self.k_w = nn.Linear(embed_cross, embed_q, bias=in_bias)

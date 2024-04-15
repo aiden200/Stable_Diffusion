@@ -6,6 +6,7 @@ from utils.transformer_blocks import SelfAttention, CrossAttention
 
 class Diffusion(nn.Module):
     def __init__(self):
+        super().__init__()
         self.time_positional_encoding = TimeEmbedding(320)
         self.unet = Unet()
         self.final_layer = Unet_Out(320, 4)
@@ -34,9 +35,9 @@ class Unet_Attn_block(nn.Module):
         self.groupnorm = nn.GroupNorm(32, channels, eps=1e-6)
         self.conv = nn.Conv2d(channels, channels, kernel_size=1, padding=0)
         self.layernorm_1 = nn.LayerNorm(channels)
-        self.attn1 = SelfAttention(n_head, channels, bias=False)
+        self.attn1 = SelfAttention(n_head, channels, in_bias=False)
         self.layernorm_2 = nn.LayerNorm(channels)
-        self.attn2 = CrossAttention(n_head, channels, context, bias=False)
+        self.attn2 = CrossAttention(n_head, channels, context, in_bias=False)
         self.layernorm_3 = nn.LayerNorm(channels)
         self.lin1 = nn.Linear(channels, 8*channels)
         self.lin2 = nn.Linear(4*channels, channels)
@@ -144,7 +145,7 @@ class Unet_Out(nn.Module):
 class Unet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.encoders = nn.Module([
+        self.encoders = nn.ModuleList([
             # (B, 4, H/8, W/8)
             SwitchSequential(nn.Conv2d(4, 320, kernel_size=3, padding=1)),
             SwitchSequential(Unet_resid_block(320, 320),
@@ -181,7 +182,7 @@ class Unet(nn.Module):
         )
 
         # Since we are adding the skip connection (the encoder outputs), so we double what we need
-        self.decoders = nn.Module([
+        self.decoders = nn.ModuleList([
             SwitchSequential(Unet_resid_block(2560, 1280)),
             SwitchSequential(Unet_resid_block(2560, 1280)),
             SwitchSequential(Unet_resid_block(2560, 1280), Upsample(1280)),
