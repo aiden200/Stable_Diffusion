@@ -4,17 +4,10 @@
 </div>
 
 <div align="center">
-   <a href="https://github.com/aiden200/2D3MF/issues">
-       <img src="https://img.shields.io/github/issues/aiden200/2D3MF?style=flat-square">
-   </a>
+   <a href="https://github.com/aiden200/2D3MF/issues"><img src="https://img.shields.io/github/issues/aiden200/2D3MF?style=flat-square"></a>
 
-    <a href="https://pytorch.org/">
-      <img src="https://img.shields.io/badge/PyTorch-%3E%3D1.8.0-EE4C2C?style=flat-square&logo=pytorch">
-    </a>
+<a href="https://pytorch.org/"><img src="https://img.shields.io/badge/PyTorch-%3E%3D1.8.0-EE4C2C?style=flat-square&logo=pytorch"></a>
 
-   <!-- <a href="https://arxiv.org/abs/2211.06627">
-       <img src="https://img.shields.io/badge/arXiv-2211.06627-b31b1b.svg?style=flat-square">
-   </a> -->
 </div>
 
 This project is an open-source implementation of the Stable Diffusion model, aimed at generating high-quality images from textual descriptions. Our implementation is based on a combination of several key components, including a U-Net architecture, Variational Autoencoder (VAE), CLIP for prompt embedding, a custom scheduler, and time embeddings to facilitate temporal coherence in generated images.
