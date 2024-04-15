@@ -1,28 +1,35 @@
 # Stable Diffusion Model Implementation
+<div align="center">
+    <img src="assets/Stable Diffusion.png">
+</div>
 
 This project is an open-source implementation of the Stable Diffusion model, aimed at generating high-quality images from textual descriptions. Our implementation is based on a combination of several key components, including a U-Net architecture, Variational Autoencoder (VAE), CLIP for prompt embedding, a custom scheduler, and time embeddings to facilitate temporal coherence in generated images.
 
+
+
 ## Acknowledgments
 
-Special thanks to Umar Jamil for his invaluable contributions to this project. We also extend our gratitude to the authors of the original Stable Diffusion paper for their groundbreaking work in the field of text-to-image generation, which has significantly inspired and guided our implementation.
+Special thanks to Umar Jamil for his invaluable contributions to this project. We also extend our gratitude to the authors of the original Stable Diffusion paper for their groundbreaking work in the field of text-to-image & image-to-image generation, which has significantly inspired and guided our implementation.
+
+
 
 ## Project Structure
 
 The project is organized as follows:
 ```bash
-.
+── assets                           # Contains images for README
 ├── LICENSE
 ├── models
-│   ├── clip
-│   │   └── clip_decoder.py     # CLIP model for prompt embedding
-│   ├── unet
-│   │   └── diffusion.py        # U-Net architecture for image generation
-│   └── vae
-│       ├── decoder.py          # Decoder part of the VAE
-│       └── encoder.py          # Encoder part of the VAE
+│   ├── clip                        # CLIP model for prompt embedding
+│   ├── stable_diffusion            # Scheduler and pipeline
+│   ├── unet                        # U-Net architecture for image generation
+│   └── vae                         # VAE decoder and encoder
+├── pretrained                      # put pretrained model in this folder
 ├── README.md
-└── utils
-    └── transformer_blocks      # Transformer blocks for various utility functions
+├── requirements.txt
+├── sd.ipynb                        # Example usage
+├── tokenizer
+└── utils                           # Transformer blocks for various utility functions
 ```
 
 ### 1. Environment Setup
