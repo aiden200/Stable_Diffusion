@@ -8,6 +8,23 @@ H = 512
 ZW = W//8
 ZH = H//8
 
+def rescale(x, old_range, new_range, clamp=False):
+    old_min, old_max = old_range
+    new_min, new_max = new_range
+    x -= old_min
+    x *= (new_max - new_min) / (old_max - old_min)
+    x += new_min
+    if clamp: # cuts off anything out of range
+        x = x.clamp(new_min, new_max)
+    return x
+
+def get_time_embedding(timestep):
+    # Doing positional encoding in time embedding
+    freqs = torch.pow(10000, -torch.arange(start=0, end=160, dtype=torch.float32) / 160)
+    x = torch.tensor([timestep], dtype=torch.float32)[:, None] * freqs[None] 
+    return torch.cat([torch.cos(x), torch.sin(x)], dim=-1)
+
+
 def generate(prompt: str, 
             unconditional_prompt: str, 
             input_image=None, 
@@ -102,3 +119,22 @@ def generate(prompt: str,
         model_output = diffusion(model_input, context, time_embedding)
 
         if cfg:
+            output_conditioned, output_unconditioned = model_output.chunk(2) # divide by 2 to get both conditional and unconditional
+            # w * (o_c - o_u) + o_u
+            model_output = cfg_scale * (output_conditioned - output_unconditioned) + output_unconditioned
+
+        # Remove the noise predicted by the UNET
+        latents = sampler.step(timestep, latents, model_output)
+    
+    to_idle(diffusion)
+    decoder = models["decoder"]
+    decoder.to(device)
+
+    images = decoder(latents)
+    to_idle(decoder)
+
+    images = rescale(images,(-1,1), (0,255), clamps=True)
+    # (B, C, H, W) -> (B, H, W, C)
+    images = images.permute(0, 2, 3, 1)
+    images = images.to("cpu", torch.uint8).numpy()
+    return images[0]
