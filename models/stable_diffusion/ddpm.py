@@ -84,7 +84,7 @@ class DDPMSampler:
         # Predicted previous sample mean
         pred_prev_mean = pred_x_0_coeff * pred_x_0 + pred_x_t_coeff * x_t
 
-
+        var = 0
         if t > 0:
             device = model_output.device
             noise = torch.randn(model_output.shape, generator = self.generator, device=device, dtype=model_output.dtype)

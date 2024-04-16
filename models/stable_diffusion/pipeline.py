@@ -139,7 +139,7 @@ def generate(prompt: str,
     images = decoder(latents)
     to_idle(decoder)
 
-    images = rescale(images,(-1,1), (0,255), clamps=True)
+    images = rescale(images,(-1,1), (0,255), clamp=True)
     # (B, C, H, W) -> (B, H, W, C)
     images = images.permute(0, 2, 3, 1)
     images = images.to("cpu", torch.uint8).numpy()
