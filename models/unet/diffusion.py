@@ -107,7 +107,7 @@ class SwitchSequential(nn.Sequential):
 
     def forward(self, x, prompt_embed, time):
         for layer in self:
-            if isinstance(layer, Unet_resid_block):
+            if isinstance(layer, Unet_Attn_block):
                 x = layer(x, prompt_embed)
             elif isinstance(layer, Unet_resid_block):
                 x = layer(x, time)
@@ -200,7 +200,7 @@ class Unet(nn.Module):
             x = layers(x, context, time)
             skip_connections.append(x)
 
-        x = self.bottleneck(x, context, time)
+        x = self.unet_tail(x, context, time)
 
         for layers in self.decoders:
             # Since we always concat with the skip connection of the encoder, the number of features increases before being sent to the decoder's layer
