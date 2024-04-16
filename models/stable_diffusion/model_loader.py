@@ -1,4 +1,4 @@
-from models.clip.clip_decoder import CLIP
+from models.clip.clip import CLIP
 from models.vae.encoder import VAE_encoder
 from models.vae.decoder import VAE_Decoder
 from models.unet.diffusion import Diffusion
@@ -18,6 +18,7 @@ def preload_models_from_weights(path, device):
     diffusion.load_state_dict(state_dict["diffusion"], strict=True)
 
     clip = CLIP().to(device)
+    # print(dir(clip))
     clip.load_state_dict(state_dict["clip"], strict=True)
 
     return {

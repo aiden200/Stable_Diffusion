@@ -42,10 +42,12 @@ def generate(prompt: str,
         if not (0<strength <=1):
             raise ValueError("Strength must be between 0 and 1")
         if idle_device:
-            to_idle: lambda x: x.to(idle_device)
+            to_idle = lambda x: x.to(idle_device)
         else:
-            to_idle: lambda x: x
+            to_idle = lambda x: x
     
+    models["device"] = device
+
     generator = torch.Generator(device=device) # generating noise
     if seed is None:
         generate.seed()
@@ -56,14 +58,14 @@ def generate(prompt: str,
     clip.to(device)
 
     # Prompt -> tokens. pad to max length
-    conditional_tokens = tokenizer.batch_encode([prompt], padding="max_length", max_length=77).input_ids
+    conditional_tokens = tokenizer.batch_encode_plus([prompt], padding="max_length", max_length=77).input_ids
     #(B, Seq_length)
     conditional_tokens = torch.tensor(conditional_tokens, dtype=torch.long, device=device)
     conditional_context = clip(conditional_tokens) # (B, Seq_length, E)
     
     if cfg:
         #random noise
-        unconditional_tokens = tokenizer.batch_encode([unconditional_prompt], padding="max_length", max_length=77).input_ids
+        unconditional_tokens = tokenizer.batch_encode_plus([unconditional_prompt], padding="max_length", max_length=77).input_ids
         unconditional_tokens = torch.tensor(unconditional_tokens, dtype=torch.long, device=device)
         unconditional_context = clip(unconditional_tokens)
 
@@ -103,7 +105,7 @@ def generate(prompt: str,
         # Start with random Noise N(0, I)
         latents = torch.randn(latents_shape, generator=generator, device=device)
     
-    diffusion = models["device"]
+    diffusion = models["diffusion"]
     diffusion.to(device)
     timesteps = tqdm(sampler.timesteps)
     for i, timestep in enumerate(timesteps):

@@ -17,9 +17,9 @@ class SelfAttention(nn.Module):
 
         q, k, v = self.qkv_w(x).chunk(3, dim=-1)
 
-        q = q.view((B, self.n_heads, L, self.d_head))
-        k = k.view((B, self.n_heads, L, self.d_head))
-        v = v.view((B, self.n_heads, L, self.d_head))
+        q = q.view((B, L, self.n_heads, self.d_head)).transpose(1, 2)
+        k = k.view((B, L, self.n_heads, self.d_head)).transpose(1, 2)
+        v = v.view((B, L, self.n_heads, self.d_head)).transpose(1, 2)
 
         qk = q @ v.transpose(-1,-2)
         qk = qk * 1/math.sqrt(self.d_head)

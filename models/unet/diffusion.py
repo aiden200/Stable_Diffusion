@@ -32,7 +32,7 @@ class Unet_Attn_block(nn.Module):
     def __init__(self, n_head, embed, context=768):
         super().__init__()
         channels = n_head*embed
-        self.groupnorm = nn.GroupNorm(32, channels, eps=1e-6)
+        self.groupNorm = nn.GroupNorm(32, channels, eps=1e-6)
         self.conv = nn.Conv2d(channels, channels, kernel_size=1, padding=0)
         self.layernorm_1 = nn.LayerNorm(channels)
         self.attn1 = SelfAttention(n_head, channels, in_bias=False)
@@ -46,7 +46,7 @@ class Unet_Attn_block(nn.Module):
     def forward(self, x, prompt_embed):
         # x (B, C, H, W), prompt_embed: (B, Seq_len, E)
         resid = x
-        x = self.groupnorm(x)
+        x = self.groupNorm(x)
         x = self.conv(x)
 
         B, C, H, W = x.shape
@@ -148,31 +148,20 @@ class Unet(nn.Module):
         self.encoders = nn.ModuleList([
             # (B, 4, H/8, W/8)
             SwitchSequential(nn.Conv2d(4, 320, kernel_size=3, padding=1)),
-            SwitchSequential(Unet_resid_block(320, 320),
-                             Unet_Attn_block(8, 40)),
-            SwitchSequential(Unet_resid_block(320, 320),
-                             Unet_Attn_block(8, 40)),
+            SwitchSequential(Unet_resid_block(320, 320), Unet_Attn_block(8, 40)),
+            SwitchSequential(Unet_resid_block(320, 320), Unet_Attn_block(8, 40)),
             # (B, 320, H/8, W/8)->(B, 640, H/16, W/16)
-            SwitchSequential(
-                nn.Conv2d(320, 320, kernel_size=3, stride=2, padding=1)),
-            SwitchSequential(Unet_resid_block(320, 640),
-                             Unet_Attn_block(8, 80)),
-            SwitchSequential(Unet_resid_block(320, 640),
-                             Unet_Attn_block(8, 80)),
+            SwitchSequential(nn.Conv2d(320, 320, kernel_size=3, stride=2, padding=1)),
+            SwitchSequential(Unet_resid_block(320, 640), Unet_Attn_block(8, 80)),
+            SwitchSequential(Unet_resid_block(640, 640), Unet_Attn_block(8, 80)),
             # (B, 640, H/16, W/16)-> (B, 1280, H/32, W/32)
-            SwitchSequential(
-                nn.Conv2d(640, 640, kernel_size=3, stride=2, padding=1)),
-            SwitchSequential(Unet_resid_block(640, 1280),
-                             Unet_Attn_block(8, 160)),
-            SwitchSequential(Unet_resid_block(1280, 1280),
-                             Unet_Attn_block(8, 160)),
+            SwitchSequential(nn.Conv2d(640, 640, kernel_size=3, stride=2, padding=1)),
+            SwitchSequential(Unet_resid_block(640, 1280), Unet_Attn_block(8, 160)),
+            SwitchSequential(Unet_resid_block(1280, 1280), Unet_Attn_block(8, 160)),
             # (B, 1280, H/32, W/32)-> (B, 1280, H/64, W/64)
-            SwitchSequential(
-                nn.Conv2d(1280, 1280, kernel_size=3, stride=2, padding=1)),
-            SwitchSequential(Unet_resid_block(1280, 1280),
-                             Unet_Attn_block(8, 160)),
-            SwitchSequential(Unet_resid_block(1280, 1280),
-                             Unet_Attn_block(8, 160)),
+            SwitchSequential(nn.Conv2d(1280, 1280, kernel_size=3, stride=2, padding=1)),
+            SwitchSequential(Unet_resid_block(1280, 1280)),
+            SwitchSequential(Unet_resid_block(1280, 1280))
         ])
 
         self.unet_tail = SwitchSequential(
@@ -199,12 +188,26 @@ class Unet(nn.Module):
             SwitchSequential(Unet_resid_block(960, 640),
                              Unet_Attn_block(8, 80), Upsample(640)),
             SwitchSequential(Unet_resid_block(960, 320),
-                             Unet_Attn_block(8, 80)),
+                             Unet_Attn_block(8, 40)),
             SwitchSequential(Unet_resid_block(640, 320),
-                             Unet_Attn_block(8, 80)),
-            SwitchSequential(Unet_resid_block(960, 320),
+                             Unet_Attn_block(8, 40)),
+            SwitchSequential(Unet_resid_block(640, 320),
                              Unet_Attn_block(8, 40)),
         ])
+    def forward(self, x, context, time):
+        skip_connections = []
+        for layers in self.encoders:
+            x = layers(x, context, time)
+            skip_connections.append(x)
+
+        x = self.bottleneck(x, context, time)
+
+        for layers in self.decoders:
+            # Since we always concat with the skip connection of the encoder, the number of features increases before being sent to the decoder's layer
+            x = torch.cat((x, skip_connections.pop()), dim=1) 
+            x = layers(x, context, time)
+        
+        return x
 
 
 class TimeEmbedding(nn.Module):
